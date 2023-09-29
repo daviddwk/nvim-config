@@ -64,6 +64,7 @@ let g:barbar_auto_setup = v:false " disable auto-setup
 lua << EOF
   require'barbar'.setup {
     animation = false,
+    auto_hide = 1,
     focus_on_close = "previous",
     icons = {
       filetype = {
@@ -111,9 +112,6 @@ set tabstop=4
 set shiftwidth=2
 
 set hidden
-
-nnoremap <C-B> :bnext<CR>
-nnoremap <C-X> :bprev<CR>
 
 "" so autosuggestion box is only 20 tall
 "" but still can scroll

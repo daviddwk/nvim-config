@@ -1,89 +1,65 @@
 call plug#begin()
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
-Plug 'rust-lang/rust.vim'
-Plug 'preservim/nerdtree'
-Plug 'tikhomirov/vim-glsl'
-Plug 'bfrg/vim-cpp-modern'
-Plug 'romgrk/barbar.nvim'
+  Plug 'neoclide/coc.nvim', {'branch': 'release'}
+  Plug 'nvim-lua/plenary.nvim' 
+  Plug 'rust-lang/rust.vim'
+  Plug 'preservim/nerdtree'
+  Plug 'tikhomirov/vim-glsl'
+  Plug 'bfrg/vim-cpp-modern'
+  Plug 'willothy/nvim-cokeline'
 call plug#end()
 
-"" bar bar
-" Move to previous/next
-nnoremap <silent>    <A-,> <Cmd>BufferPrevious<CR>
-nnoremap <silent>    <A-.> <Cmd>BufferNext<CR>
-
-" Re-order to previous/next
-nnoremap <silent>    <A-<> <Cmd>BufferMovePrevious<CR>
-nnoremap <silent>    <A->> <Cmd>BufferMoveNext<CR>
-
-" Goto buffer in position...
-nnoremap <silent>    <A-1> <Cmd>BufferGoto 1<CR>
-nnoremap <silent>    <A-2> <Cmd>BufferGoto 2<CR>
-nnoremap <silent>    <A-3> <Cmd>BufferGoto 3<CR>
-nnoremap <silent>    <A-4> <Cmd>BufferGoto 4<CR>
-nnoremap <silent>    <A-5> <Cmd>BufferGoto 5<CR>
-nnoremap <silent>    <A-6> <Cmd>BufferGoto 6<CR>
-nnoremap <silent>    <A-7> <Cmd>BufferGoto 7<CR>
-nnoremap <silent>    <A-8> <Cmd>BufferGoto 8<CR>
-nnoremap <silent>    <A-9> <Cmd>BufferGoto 9<CR>
-nnoremap <silent>    <A-0> <Cmd>BufferLast<CR>
-
-" Pin/unpin buffer
-nnoremap <silent>    <A-p> <Cmd>BufferPin<CR>
-
-" Close buffer
-nnoremap <silent>    <A-c> <Cmd>BufferClose<CR>
-" Restore buffer
-nnoremap <silent>    <A-s-c> <Cmd>BufferRestore<CR>
-
-" Wipeout buffer
-"                          :BufferWipeout
-" Close commands
-"                          :BufferCloseAllButCurrent
-"                          :BufferCloseAllButVisible
-"                          :BufferCloseAllButPinned
-"                          :BufferCloseAllButCurrentOrPinned
-"                          :BufferCloseBuffersLeft
-"                          :BufferCloseBuffersRight
-
-" Magic buffer-picking mode
-nnoremap <silent> <C-p>    <Cmd>BufferPick<CR>
-nnoremap <silent> <C-p>    <Cmd>BufferPickDelete<CR>
-
-" Sort automatically by...
-nnoremap <silent> <Space>bb <Cmd>BufferOrderByBufferNumber<CR>
-nnoremap <silent> <Space>bd <Cmd>BufferOrderByDirectory<CR>
-nnoremap <silent> <Space>bl <Cmd>BufferOrderByLanguage<CR>
-nnoremap <silent> <Space>bw <Cmd>BufferOrderByWindowNumber<CR>
-
-" Other
-" :BarbarEnable - enables barbar (enabled by default)
-" :BarbarDisable - very bad command, should never be used
-
-let g:barbar_auto_setup = v:false " disable auto-setup
 lua << EOF
-  require'barbar'.setup {
-    animation = false,
-    auto_hide = 1,
-    focus_on_close = "previous",
-    icons = {
-      filetype = {
-        custom_colors = false,
-        enabled = false,
-      },
-      gitsigns = {
-        added = {enabled = true, icon = '+'},
-        changed = {enabled = true, icon = '~'},
-        deleted = {enabled = true, icon = '-'},
-      },
-      seperator = {left = '', right = '|'},
-      seperator_at_end = false,
-      button = 'X'
+
+  local get_hex = require('cokeline.hlgroups').get_hl_attr
+
+  local yellow = vim.g.terminal_color_3
+
+  require('cokeline').setup({
+    show_if_buffers_are_at_least = 2,
+    default_hl = {
+      fg = function(buffer)
+        return
+          buffer.is_focused
+          and get_hex('Normal', 'fg')
+           or get_hex('Comment', 'fg')
+      end,
+      bg = function() return get_hex('ColorColumn', 'bg') end,
+      underline = true,
     },
-    sidebar_filetypes = {
-      ['nerdtree'] = { event = 'BufWipeout' },
+
+    sidebar = {
+      filetype = {'NvimTree', 'neo-tree', 'nerdtree'},
+      components = {
+        {
+          text = '',
+          bold = true,
+          fg = function(buffer)
+            return
+              buffer.is_focused
+              and get_hex('Normal', 'fg')
+              or get_hex('Comment', 'fg')
+          end,
+          underline = false,
+        },
+      }
     },
-  }
+
+    components = {
+      {
+        text = function(buffer) return '│' end,
+      },
+      {
+        text = '  ',
+      },
+      {
+        text = function(buffer) return buffer.filename .. '  ' end,
+        bold = function(buffer)
+          return buffer.is_focused
+        end,
+      },
+    },
+  })
+
 EOF
 
 set filetype=glslx
@@ -91,6 +67,7 @@ set filetype=glslx
 set completeopt=menu,menuone,preview,noselect,noinsert
 let g:ale_completion_enabled = 1
 
+let NERDTreeMinimalUI=1
 nmap <C-n> :NERDTreeToggle<CR>
 
 "" no one is really happy until you have this shortcuts
@@ -112,6 +89,28 @@ set tabstop=4
 set shiftwidth=2
 
 set hidden
+
+"" Window Navigation with Ctrl-[hjkl]
+noremap <C-J> <C-W>j
+noremap <C-K> <C-W>k
+noremap <C-H> <C-W>h
+noremap <C-L> <C-W>l
+
+noremap <C-DOWN> <C-W>j
+noremap <C-UP> <C-W>k
+noremap <C-LEFT> <C-W>h
+noremap <C-RIGHT> <C-W>l
+
+noremap <A-J> <Plug>(cokeline-switch-prev)
+noremap <A-K> <Plug>(cokeline-switch-next)
+noremap <A-H> <Plug>(cokeline-focus-prev)
+noremap <A-L> <Plug>(cokeline-focus-next)
+
+noremap <A-DOWN> <Plug>(cokeline-switch-prev)
+noremap <A-UP> <Plug>(cokeline-switch-next)
+noremap <A-LEFT> <Plug>(cokeline-focus-prev)
+noremap <A-RIGHT> <Plug>(cokeline-focus-next)
+
 
 "" so autosuggestion box is only 20 tall
 "" but still can scroll
@@ -144,7 +143,9 @@ function! CheckBackspace() abort
   return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 
+
 nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
+
